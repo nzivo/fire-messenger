@@ -40,7 +40,7 @@ const Login = () => {
           onChange={(e) => setEmail(e.target.value)}
           value={email}
           type="email"
-          placeholder="Email Address"
+          placeholder="email Address"
           className="form-input"
         />
         <input
