@@ -26,11 +26,20 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Firebase signup method
+const handleAuthError = (error) => {
+  const errorMessage = error.code.split("/")[1].split("-").join(" ");
+  toast.error(errorMessage.charAt(0).toUpperCase() + errorMessage.slice(1));
+  console.error(error);
+};
+
 const signup = async (username, email, password) => {
   try {
-    const res = await createUserWithEmailAndPassword(auth, email, password);
-    const user = res.user;
-    await setDoc(doc(db, "users", user.uid), {
+    const { user } = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const userData = {
       id: user.uid,
       username: username.toLowerCase(),
       email,
@@ -38,13 +47,14 @@ const signup = async (username, email, password) => {
       avatar: "",
       bio: "Hey there, I am using fire message",
       lastSeen: Date.now(),
-    });
-    await setDoc(doc(db, "chats", user.uid), {
-      chatData: [],
-    });
+    };
+
+    await Promise.all([
+      setDoc(doc(db, "users", user.uid), userData),
+      setDoc(doc(db, "chats", user.uid), { chatData: [] }),
+    ]);
   } catch (error) {
-    console.error(error);
-    toast.error(error.code);
+    handleAuthError(error);
   }
 };
 
@@ -52,8 +62,7 @@ const login = async (email, password) => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
-    console.error(error);
-    toast.error(error.code);
+    handleAuthError(error);
   }
 };
 
