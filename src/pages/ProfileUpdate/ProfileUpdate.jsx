@@ -41,6 +41,7 @@ const ProfileUpdate = () => {
       }
       const snap = await getDoc(docRef);
       setUserData(snap.data());
+      toast.success("Profile updated successfully");
       navigate("/chat");
     } catch (error) {
       handleAuthError(error);
@@ -106,7 +107,13 @@ const ProfileUpdate = () => {
         </form>
         <img
           className="profile-pic"
-          src={image ? URL.createObjectURL(image) : assets.logo_icon}
+          src={
+            image
+              ? URL.createObjectURL(image)
+              : prevImage
+              ? prevImage
+              : assets.logo_icon
+          }
           alt=""
         />
       </div>
