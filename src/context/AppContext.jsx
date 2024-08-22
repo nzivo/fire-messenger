@@ -1,6 +1,6 @@
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { createContext, useState } from "react";
-import { auth, db } from "../config/firebase";
+import { auth, db, handleAuthError } from "../config/firebase";
 import { useNavigate } from "react-router-dom";
 
 export const AppContext = createContext();
@@ -28,7 +28,9 @@ const AppContextProvider = (props) => {
           await updateDoc(userRef, { lastSeen: Date.now() });
         }
       }, 60000);
-    } catch (error) {}
+    } catch (error) {
+      handleAuthError(error);
+    }
   };
   const value = {
     userData,
