@@ -10,6 +10,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db, handleAuthError } from "../../config/firebase";
+import upload from "../../lib/upload";
 
 const ChatBox = () => {
   const { userData, messagesId, chatUser, messages, setMessages } =
@@ -78,13 +79,54 @@ const ChatBox = () => {
     }
   };
 
+  // A function to send image
+  const sendImage = async (e) => {
+    try {
+      const fileUrl = await upload(e.target.files[0]);
+      if (fileUrl && messagesId) {
+        await updateDoc(doc(db, "messages", messagesId), {
+          messages: arrayUnion({
+            sId: userData.id,
+            image: fileUrl,
+            createdAt: new Date(),
+          }),
+        });
+
+        const userIDs = [chatUser.rId, userData.id];
+
+        userIDs.forEach(async (id) => {
+          const userChatsRef = doc(db, "chats", id);
+          const userChatsSnapshot = await getDoc(userChatsRef);
+          if (userChatsSnapshot.exists()) {
+            const userChatData = userChatsSnapshot.data();
+            const chatIndex = userChatData.chatData.findIndex(
+              (c) => c.messageId === messagesId
+            );
+            userChatData.chatData[chatIndex].lastMessage = "Photo";
+            userChatData.chatData[chatIndex].updatedAt = Date.now();
+            if (userChatData.chatData[chatIndex].rId === userData.id) {
+              userChatData.chatData[chatIndex].messageSeen = false;
+            }
+            await updateDoc(userChatsRef, {
+              chatData: userChatData.chatData,
+            });
+          }
+        });
+      }
+    } catch (error) {
+      handleAuthError(error);
+    }
+  };
+
   return chatUser ? (
     <div className="chat-box">
       <div className="chat-user">
         <img src={chatUser.userData.avatar} alt="" />
         <p>
           {chatUser.userData.name}{" "}
-          <img className="dot" src={assets.green_dot} alt="" />
+          {Date.now() - chatUser.userData.lastSeen <= 61000 ? (
+            <img className="dot" src={assets.green_dot} alt="" />
+          ) : null}
         </p>
         <img src={assets.help_icon} alt="" className="help" />
       </div>
@@ -96,7 +138,12 @@ const ChatBox = () => {
               msg.sId === userData.id ? "sender-message" : "receiver-message"
             }
           >
-            <p className="message">{msg.text}</p>
+            {msg["image"] ? (
+              <img className="message-image" src={msg.image} alt="" />
+            ) : (
+              <p className="message">{msg.text}</p>
+            )}
+
             <div>
               <img
                 src={
@@ -121,6 +168,7 @@ const ChatBox = () => {
           id=""
         />
         <input
+          onChange={sendImage}
           type="file"
           name=""
           id="image"
