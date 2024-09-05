@@ -1,31 +1,60 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./RightSidebar.css";
 import assets from "../../assets/assets";
 import { logout } from "../../config/firebase";
+import { AppContext } from "../../context/AppContext";
 
 const RightSidebar = () => {
-  return (
+  const { userData, chatUser, messages } = useContext(AppContext);
+  const [messageImages, setMessageImages] = useState([]);
+
+  useEffect(() => {
+    let tempVar = [];
+    messages.map((msg) => {
+      if (msg.image) {
+        tempVar.push(msg.image);
+      }
+    });
+    setMessageImages(tempVar);
+  }, [messages]);
+
+  return chatUser ? (
     <div className="right-sidebar">
       <div className="rs-profile">
-        <img src={assets.profile_img} alt="" />
+        <img src={chatUser.userData.avatar} alt="" />
         <h3>
-          John Nzivo
+          {chatUser.userData.name}
           <img src={assets.green_dot} className="dot" alt="" />
         </h3>
-        <p>Hey, I am using Fire Message</p>
+        <p>{chatUser.userData.bio}</p>
       </div>
       <hr />
       <div className="rs-media">
         <p>Media</p>
         <div>
-          <img src={assets.pic1} alt="" />
-          <img src={assets.pic2} alt="" />
-          <img src={assets.pic3} alt="" />
-          <img src={assets.pic4} alt="" />
-          <img src={assets.pic1} alt="" />
-          <img src={assets.pic2} alt="" />
+          {messageImages.map((url, index) => (
+            <img
+              onClick={() => (window.location.href = url)}
+              key={index}
+              src={url}
+              alt=""
+            />
+          ))}
         </div>
       </div>
+      <button onClick={() => logout()}>Sign Out</button>
+    </div>
+  ) : (
+    <div className="right-sidebar">
+      <div className="rs-profile">
+        <img src={userData.avatar} alt="" />
+        <h3>
+          {userData.name}
+          <img src={assets.green_dot} className="dot" alt="" />
+        </h3>
+        <p>{userData.bio}</p>
+      </div>
+      <hr />
       <button onClick={() => logout()}>Sign Out</button>
     </div>
   );
