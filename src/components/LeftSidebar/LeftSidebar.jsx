@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./LeftSidebar.css";
 import assets from "../../assets/assets";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +27,8 @@ const LeftSidebar = () => {
     setChatUser,
     setMessagesId,
     messagesId,
+    chatVisible,
+    setChatVisible,
   } = useContext(AppContext);
   const [user, setUser] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
@@ -89,10 +91,36 @@ const LeftSidebar = () => {
           messageSeen: true,
         }),
       });
+
+      // Close the sidebar and open chatbox after search and selecting user
+      const uSnap = await getDoc(doc(db, "users", user.id));
+      const uData = uSnap.data();
+      setChat({
+        messagesId: newMessageRef.id,
+        lastMessage: "",
+        rId: user.id,
+        updatedAt: Date.now(),
+        messageSeen: true,
+        userData: uData,
+      });
+      setShowSearch(false);
+      setChatVisible(true);
     } catch (error) {
       handleAuthError(error);
     }
   };
+
+  useEffect(() => {
+    const updateChatUserData = async () => {
+      if (chatUser) {
+        const userRef = doc(db, "users", chatUser.userData.id);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.data();
+        setChatUser((prev) => ({ ...prev, userData: userData }));
+      }
+    };
+    updateChatUserData();
+  }, [chatData]);
 
   const setChat = async (item) => {
     try {
@@ -108,13 +136,14 @@ const LeftSidebar = () => {
       await updateDoc(userChatsRef, {
         chatData: userChatsData.chatData,
       });
+      setChatVisible(true);
     } catch (error) {
       handleAuthError(error);
     }
   };
 
   return (
-    <div className="left-sidebar">
+    <div className={`left-sidebar ${chatVisible ? "hidden" : ""}`}>
       <div className="ls-top">
         <div className="ls-nav">
           <img src={assets.logo} alt="" className="logo" />
