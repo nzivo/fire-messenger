@@ -3,10 +3,19 @@ import { initializeApp } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   getAuth,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { doc, getFirestore, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  getFirestore,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { toast } from "react-toastify";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -75,4 +84,25 @@ const logout = async () => {
   }
 };
 
-export { signup, login, logout, auth, db, handleAuthError };
+const resetPassword = async (email) => {
+  console.log(email);
+  if (!email) {
+    toast.error("Enter your email");
+    return null;
+  }
+  try {
+    const userRef = collection(db, "users");
+    const q = query(userRef, where("email", "==", email));
+    const querySnap = await getDocs(q);
+    if (!querySnap.empty) {
+      await sendPasswordResetEmail(auth, email);
+      toast.success("Reset Email Sent");
+    } else {
+      toast.error("Email doesn't exist");
+    }
+  } catch (error) {
+    toast.error(error);
+  }
+};
+
+export { signup, login, logout, auth, db, handleAuthError, resetPassword };
