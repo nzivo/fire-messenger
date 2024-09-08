@@ -13,7 +13,8 @@
 }
 
 .chat-user img {
-  width: 25px;
+  width: 38px;
+  height: 38px;
   object-fit: cover;
   border-radius: 50%;
 }
@@ -137,4 +138,23 @@
   font-size: 20px;
   font-weight: 500;
   color: #383838;
+}
+
+.chat-user .arrow {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .chat-box {
+    width: 100%;
+    justify-content: center;
+  }
+  .chat-user .arrow {
+    display: block;
+    height: 25px;
+    object-fit: cover;
+  }
+  .chat-user .help {
+    display: none;
+  }
 }
